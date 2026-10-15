@@ -47,5 +47,6 @@ Build command `npm run build` · Output `dist` · variáveis acima.
 - [x] Reengenharia e arquitetura
 - [x] Banco (scripts 001 e 002)
 - [x] Site público e administração (testados com dados simulados)
-- [ ] Conectar ao Supabase real
-- [ ] GitHub + Cloudflare Pages
+- [x] Conectado ao Supabase real e testado (15/10/2026)
+- [x] Publicado: https://reliquias-da-familia.pages.dev
+- [ ] Segredos do GitHub para a tarefa "Manter Supabase ativo"
