@@ -1,0 +1,51 @@
+# Relíquias da Família
+
+Site para catalogar, divulgar e vender (via WhatsApp) os objetos antigos da coleção da família.
+Antigo **AMReliquias**, migrado para o Claude em 15/10/2026. Decisões em `docs/ARQUITETURA.md`.
+
+## Stack
+React 19 + Vite + TypeScript · Supabase (PostgreSQL, Storage, Auth) · Cloudflare Pages · GitHub
+
+## Páginas
+| Público | Administração (`/admin`, só equipe) |
+|---|---|
+| `/` início | `/admin` painel |
+| `/acervo` catálogo com filtros | `/admin/pecas` peças, fotos, valores |
+| `/peca/:id` ficha + "Tenho interesse" | `/admin/interesses` funil de negociação |
+| `/sobre` responsável e contato | `/admin/categorias` · `/admin/institucional` |
+
+## Estrutura
+```
+database/      scripts SQL (executar em ordem no Supabase)
+docs/          arquitetura e reengenharia
+public/        arquivos estáticos
+src/
+  lib/         supabase, autenticação, rotas, fotos, formatação, tipos
+  components/  layout público, cartão de peça, etiqueta, carimbo
+  pages/       páginas públicas
+  pages/admin/ área administrativa
+.github/workflows/manter-ativo.yml   evita a pausa do Supabase grátis
+```
+
+## Configuração
+Variáveis (arquivo `.env.local` ou Cloudflare Pages → Settings → Variables):
+```
+VITE_SUPABASE_URL=https://<projeto>.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+```
+
+## Rodar no computador (opcional)
+```
+npm install
+npm run dev
+```
+
+## Publicação (Cloudflare Pages)
+Build command `npm run build` · Output `dist` · variáveis acima.
+
+## Status
+- [x] Reengenharia e arquitetura
+- [x] Banco (scripts 001 e 002)
+- [x] Site público e administração (testados com dados simulados)
+- [ ] Conectar ao Supabase real
+- [ ] GitHub + Cloudflare Pages

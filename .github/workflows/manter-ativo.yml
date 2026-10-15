@@ -1,0 +1,15 @@
+# Acessa o banco 1x por dia para o Supabase (plano grátis) não pausar o projeto.
+# Requer os segredos do repositório: SUPABASE_URL e SUPABASE_PUBLISHABLE_KEY
+name: Manter Supabase ativo
+on:
+  schedule:
+    - cron: '17 9 * * *'   # 06:17 em Fortaleza
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Consultar o acervo
+        run: |
+          curl -fsS "${{ secrets.SUPABASE_URL }}/rest/v1/categorias?select=id&limit=1" \
+            -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" > /dev/null
