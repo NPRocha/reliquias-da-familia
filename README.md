@@ -1,7 +1,7 @@
 # Relíquias da Família
 
 Site para catalogar, divulgar e vender (via WhatsApp) os objetos antigos da coleção da família.
-Antigo **AMReliquias**, migrado para o Claude em 15/10/2026. Decisões em `docs/ARQUITETURA.md`.
+Antigo **AMReliquias**, migrado para o Claude em 15/10/2026. Decisões em `docs/ARQUITETURA.md`. Configuração e operação em `docs/GUIA_CONFIGURACAO.md`.
 
 ## Stack
 React 19 + Vite + TypeScript · Supabase (PostgreSQL, Storage, Auth) · Cloudflare Pages · GitHub
@@ -17,7 +17,7 @@ React 19 + Vite + TypeScript · Supabase (PostgreSQL, Storage, Auth) · Cloudfla
 ## Estrutura
 ```
 database/      scripts SQL (executar em ordem no Supabase)
-docs/          arquitetura e reengenharia
+docs/          arquitetura, reengenharia e guia de configuração
 public/        arquivos estáticos
 src/
   lib/         supabase, autenticação, rotas, fotos, formatação, tipos
