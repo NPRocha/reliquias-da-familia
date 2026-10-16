@@ -14,3 +14,12 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm run verificar
       - run: npm run build
+      - run: npm run build -- --outDir dist-teste
+        env:
+          VITE_SUPABASE_URL: https://exemplo.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_teste
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-teste
+          path: dist-teste
+          retention-days: 1
