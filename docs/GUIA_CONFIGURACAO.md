@@ -1,6 +1,6 @@
 # Relíquias da Família — Guia de configuração e operação
 
-Versão 1.0 · 15/10/2026 · Responsável: Paulo Rocha
+Versão 1.1 · 15/10/2026 (chave de vendas, usuários com código de acesso) · Responsável: Paulo Rocha
 
 Este guia reúne tudo o que foi feito para colocar o site no ar (GitHub, Supabase e Cloudflare) e o que é preciso para mantê-lo funcionando. Siga as seções na ordem ao refazer a configuração do zero.
 
@@ -24,7 +24,7 @@ WhatsApp ── negociação com os interessados
 | Item | Valor |
 |---|---|
 | Site público | https://reliquias-da-familia.pages.dev |
-| Área administrativa | https://reliquias-da-familia.pages.dev/admin |
+| Área administrativa | https://reliquias-da-familia.pages.dev/admin (só ADMIN e OPERADOR) |
 | Código-fonte (GitHub) | https://github.com/NPRocha/reliquias-da-familia (privado, branch `main`) |
 | Projeto Supabase | `reliquias-da-familia` · ID `vvucgdnwpixokwhcvrta` · região `sa-east-1` (São Paulo) |
 | URL do Supabase | https://vvucgdnwpixokwhcvrta.supabase.co |
@@ -64,12 +64,13 @@ SQL Editor → **New query** → colar todo o conteúdo do arquivo → **Run**. 
 |---|---|---|---|
 | 1 | `001_estrutura_inicial.sql` | Tabelas, regras de segurança (RLS), locais das fotos (buckets `objetos` e `institucional`), estados de conservação | *Success. No rows returned* |
 | 2 | `002_storage_leitura_equipe.sql` | Permite à equipe excluir fotos | *Success. No rows returned* |
+| 3 | `003_vendas_e_acesso.sql` | Chave de vendas, usuários (ADMIN/OPERADOR/VISITANTE) com código de acesso, fotos privadas (máx. 4 por peça, 500 KB), reserva pelo interesse | *Success. No rows returned* |
 
 Os scripts são executados **uma única vez**. Rodar de novo gera erro de "já existe".
 
 ### 3.3 Bloquear cadastro público
 Authentication → **Sign In / Providers** → desmarcar **Allow new users to sign up** → Save.
-Assim ninguém cria conta sozinho; só a equipe cadastrada entra na administração.
+Assim ninguém cria conta sozinho. As contas são liberadas pelo ADMIN, com código de acesso (seção 3.7).
 
 ### 3.4 Criar o usuário administrador
 1. Authentication → **Users** → **Add user** → **Create new user** → e-mail + senha → marcar **Auto Confirm User**.
@@ -90,37 +91,30 @@ Esperado: *1 row affected*. Se der 0, o e-mail não confere com o cadastrado.
 Authentication → **URL Configuration** → **Site URL** = `https://reliquias-da-familia.pages.dev` → Save.
 Necessário para que e-mails do Supabase (ex.: recuperação de senha) apontem para o site, e não para `localhost`.
 
-### 3.7 Usuários da equipe
+### 3.7 Usuários (feito pela administração do site)
 
-**Conferir usuários e perfis:**
-```sql
-SELECT u.email, u.email_confirmed_at, p.nome, p.papel, p.ativo
-FROM auth.users u
-LEFT JOIN public.perfis p ON p.id = u.id;
-```
+Desde o script 003, o ADMIN cadastra todos pela tela **Usuários** — sem SQL e sem e-mails do Supabase.
 
-**Incluir um operador** (pode cadastrar peças e atender interesses): criar o usuário como em 3.4 e rodar:
-```sql
-INSERT INTO public.perfis (id, nome, papel)
-SELECT id, 'NOME DA PESSOA', 'OPERADOR'
-FROM auth.users
-WHERE email = 'EMAIL_DA_PESSOA';
-```
+| Tipo | O que acessa |
+|---|---|
+| **ADMIN** | Tudo, inclusive Usuários e Configurações (chave de vendas e textos da entrada) |
+| **OPERADOR** | Administração: peças, fotos, categorias, página Sobre e interesses |
+| **VISITANTE** | Família e convidados: o site (acervo completo com vendas desligadas; só peças à venda com vendas ligadas) |
 
-**Bloquear o acesso de alguém** (sem apagar o histórico):
-```sql
-UPDATE public.perfis SET ativo = false
-WHERE id = (SELECT id FROM auth.users WHERE email = 'EMAIL_DA_PESSOA');
-```
+**Incluir alguém:** Usuários → nome, e-mail, WhatsApp e tipo → **Cadastrar e gerar código**. Aparece um código de 6 dígitos (válido por 48 h, bloqueado após 5 tentativas erradas) e o botão **Enviar pelo WhatsApp** com a mensagem pronta.
+A pessoa acessa **Primeiro acesso** (link na tela de entrada), informa e-mail e código e cria a própria senha. O ADMIN nunca conhece a senha.
 
-**Trocar senha** (o Supabase não tem campo para digitar senha nova):
+**Esqueceu a senha:** Usuários → **Código para nova senha** → enviar. A pessoa usa o link **Esqueci minha senha** da tela de entrada.
+
+**Bloquear o acesso:** Usuários → **Bloquear** (o histórico fica; **Reativar** devolve o acesso). O sistema não deixa ficar sem um ADMIN ativo.
+
+**Trocar a própria senha (ADMIN):** gerar um código para si mesmo em Usuários e usar **Esqueci minha senha**.
+
+**Conferir pelo SQL Editor (opcional):**
 ```sql
-UPDATE auth.users
-SET encrypted_password = extensions.crypt('SUA_NOVA_SENHA', extensions.gen_salt('bf')),
-    updated_at = now()
-WHERE email = 'SEU_EMAIL_AQUI';
+SELECT nome, email, papel, ativo, usuario_id IS NOT NULL AS ja_acessou
+FROM public.perfis ORDER BY nome;
 ```
-Esperado: *1 row affected*. Depois de usar, **apague essa query do histórico do SQL Editor** (ela contém a senha).
 
 ---
 
@@ -198,42 +192,46 @@ Se o GitHub desativar a tarefa por longa inatividade do repositório (ele avisa 
 
 ## 6. Primeiro uso do sistema
 
-1. Acessar https://reliquias-da-familia.pages.dev/admin e entrar com e-mail e senha (seção 3.4).
-2. **Página Sobre** (menu da administração): preencher nome, título, apresentação, trajetória, **WhatsApp para negociação** e foto.
-   O WhatsApp informado aqui é o número para onde os interessados são direcionados. Sem ele, o botão de WhatsApp não aparece para o visitante.
-3. **Categorias**: cadastrar (ex.: Relógios, Louças e cristais, Mobiliário).
-4. **Peças → Cadastrar peça**: preencher e clicar em **Cadastrar e adicionar fotos**. Em seguida enviar as fotos (são reduzidas automaticamente) e escolher a foto de capa.
-5. Para a peça aparecer com o botão **Tenho interesse**: situação **À venda** e **Mostrar no site** marcado.
+1. Rodar o script `003_vendas_e_acesso.sql` (seção 3.2), se ainda não rodou.
+2. Acessar https://reliquias-da-familia.pages.dev, entrar com e-mail e senha e clicar em **Administração**.
+3. **Página Sobre**: preencher nome, título, apresentação, trajetória e foto (vista pela família e convidados).
+4. **Categorias**: cadastrar (ex.: Relógios, Louças e cristais, Mobiliário).
+5. **Peças → Cadastrar peça**: preencher e clicar em **Cadastrar e adicionar fotos**. Até 4 fotos por peça; cada uma é reduzida automaticamente para até 1600 px e 500 KB (original até 20 MB).
+6. **Usuários**: cadastrar operadores e visitantes (seção 3.7).
+7. **Configurações**: revisar os textos da tela de entrada. A chave **Vendas** começa desligada.
 
-### Regras de exibição
-| Situação | No site |
-|---|---|
-| Acervo da família | Aparece, sem carimbo e sem preço |
-| À venda | Carimbo "À venda", preço e formulário "Tenho interesse" |
-| Reservado | Carimbo "Reservado", sem formulário |
-| Vendido | Carimbo "Vendido", fica como registro do acervo |
-| "Mostrar no site" desmarcado | Não aparece para o visitante |
+### Chave "Vendas" (só ADMIN, em Configurações)
+| | Vendas desligadas (início) | Vendas ligadas |
+|---|---|---|
+| Público (sem login) | Só a tela de entrada | Peças "À venda", com preço e "Tenho interesse" |
+| VISITANTE | Acervo completo, página Sobre e valor estimado; nada de venda | Igual ao público, com os dados já preenchidos no "Tenho interesse" |
+| ADMIN / OPERADOR | Tudo na administração; pode preencher preço e situação antes | Tudo, inclusive os interesses |
 
-**Nunca aparecem no site:** valor estimado e observações internas.
+**Nunca aparecem no site:** observações internas. O valor estimado só aparece para família/convidados com as vendas desligadas.
+Peça com **Visível no site** desmarcado não aparece para ninguém fora da equipe.
 
-### Interesses
-Visitante preenche **Tenho interesse** → o registro aparece no **Painel** e em **Interesses** → a equipe usa o botão **WhatsApp** do cartão para responder e atualiza a situação (Novo → Em contato → Negociando → Concluído/Descartado).
-Uma peça com interesses registrados não pode ser excluída: para tirá-la do site, desmarque **Mostrar no site**.
+### Interesses e reserva
+Interessado preenche **Tenho interesse** (nome e WhatsApp) → aparece no **Painel** e em **Interesses** → a equipe responde pelo botão **WhatsApp**.
+- **Reservar peça**: a peça sai do site e ninguém mais registra interesse nela.
+- **Concluir venda**: peça "Vendido"; interesse "Concluído".
+- **Desistência**: a peça volta "À venda" ao site; interesse "Descartado".
+Outros interesses na mesma peça ficam aguardando; o cartão avisa "Peça reservada para outro interessado" ou "Peça já vendida".
+Uma peça com interesses registrados não pode ser excluída: para tirá-la do site, desmarque **Visível no site**.
 
 ---
 
 ## 7. Segurança (o que o banco garante)
 
-Testado no banco real em 15/10/2026:
+Regras conferidas em banco de teste em 15/10/2026 (script 003):
 
-| O visitante… | Resultado |
+| Quem | Resultado |
 |---|---|
-| vê peças marcadas como públicas | Sim |
-| vê valor estimado / observações internas | Não (bloqueado pelo banco) |
-| lê interesses ou usuários | Não |
-| cadastra, altera ou exclui peças | Não |
-| registra interesse em peça "À venda" | Sim (só nela) |
-| envia ou apaga fotos | Não |
+| Público, vendas desligadas | Não vê peças, fotos nem a página Sobre |
+| Público, vendas ligadas | Vê só peças "À venda" e suas fotos; registra interesse só nelas |
+| Visitante | Nunca vê observações internas, interesses nem outros usuários |
+| Qualquer um sem ser equipe | Não cadastra, altera ou exclui peças e fotos |
+| Código de acesso | Guardado só criptografado; vence em 48 h; bloqueia após 5 erros |
+| Fotos | Privadas: abertas por endereço temporário, conforme as regras acima |
 
 ---
 
@@ -265,8 +263,11 @@ Testado no banco real em 15/10/2026:
 | "E-mail ou senha incorretos" | Senha ou e-mail diferente do cadastrado | Conferir com a consulta de 3.7 e trocar a senha (3.7) |
 | "Sem acesso à administração" | Usuário sem perfil ou inativo | `INSERT` em `perfis` (3.4 / 3.7) ou `ativo = true` |
 | Erro ao excluir foto | Script 002 não executado | Rodar `002_storage_leitura_equipe.sql` |
-| Visitante não vê botão de WhatsApp | WhatsApp não preenchido na Página Sobre | Preencher na administração |
-| Peça não aparece no site | "Mostrar no site" desmarcado | Marcar e salvar |
+| Erro em Usuários, Configurações ou fotos sem aparecer | Script 003 não executado | Rodar `003_vendas_e_acesso.sql` |
+| "Código inválido ou vencido" | Código errado, vencido (48 h) ou já usado | Gerar novo código em Usuários |
+| "Código bloqueado" | 5 tentativas erradas | Gerar novo código em Usuários |
+| "Acesso não liberado" | Usuário bloqueado | Reativar em Usuários |
+| Peça não aparece no site | "Visível no site" desmarcado, ou vendas ligadas e a peça não está "À venda" | Conferir na ficha da peça |
 | Peça sem "Tenho interesse" | Situação diferente de "À venda" | Mudar para "À venda" |
 | ❌ na tarefa do GitHub | Segredos ausentes ou com nome errado | Refazer 4.4 |
 | Publicação com erro no Cloudflare | Falha de build | Deployments → Build log (enviar ao Claude) |
@@ -308,6 +309,7 @@ ReliquiasDaFamilia/
 
 - [x] Supabase: projeto criado em São Paulo
 - [x] Supabase: scripts 001 e 002 executados
+- [ ] Supabase: script 003 executado
 - [x] Supabase: cadastro público bloqueado
 - [x] Supabase: usuário ADMIN criado e testado
 - [ ] Supabase: Site URL configurado (3.6)
@@ -316,7 +318,8 @@ ReliquiasDaFamilia/
 - [ ] GitHub: segredos `SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY` + teste da tarefa (4.4)
 - [x] Cloudflare: conta confirmada e projeto Pages publicado
 - [x] Teste completo no banco real (cadastro, foto, interesse, segurança, limpeza)
-- [ ] Página Sobre preenchida (com WhatsApp)
+- [ ] Página Sobre preenchida
+- [ ] Usuários (operadores e visitantes) cadastrados
 - [ ] Categorias e primeiras peças cadastradas
 - [ ] Rotina mensal de backup definida
 - [ ] Pasta antiga: apagar `C:\PauloRocha\OneDrive\Programas\AMReliquias\_claude_tmp_supabase.tgz` (arquivo temporário usado na migração)

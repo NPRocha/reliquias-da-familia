@@ -1,18 +1,19 @@
 # Relíquias da Família
 
-Site para catalogar, divulgar e vender (via WhatsApp) os objetos antigos da coleção da família.
+Site para catalogar e organizar os objetos antigos da coleção da família. A venda (contato pelo WhatsApp) só aparece quando o ADMIN liga a chave "Vendas".
 Antigo **AMReliquias**, migrado para o Claude em 15/10/2026. Decisões em `docs/ARQUITETURA.md`. Configuração e operação em `docs/GUIA_CONFIGURACAO.md`.
 
 ## Stack
 React 19 + Vite + TypeScript · Supabase (PostgreSQL, Storage, Auth) · Cloudflare Pages · GitHub
 
 ## Páginas
-| Público | Administração (`/admin`, só equipe) |
+| Site (login; com vendas ligadas, também o público) | Administração (`/admin`, só ADMIN e OPERADOR) |
 |---|---|
-| `/` início | `/admin` painel |
-| `/acervo` catálogo com filtros | `/admin/pecas` peças, fotos, valores |
-| `/peca/:id` ficha + "Tenho interesse" | `/admin/interesses` funil de negociação |
-| `/sobre` responsável e contato | `/admin/categorias` · `/admin/institucional` |
+| `/` entrada (login) · início do acervo | `/admin` painel |
+| `/primeiro-acesso` criar senha com o código | `/admin/pecas` peças, fotos (máx. 4), valores |
+| `/acervo` acervo ou peças disponíveis | `/admin/interesses` funil e reserva |
+| `/peca/:id` ficha + "Tenho interesse" | `/admin/categorias` · `/admin/institucional` |
+| `/sobre` família (vendas desligadas) | `/admin/usuarios` · `/admin/configuracoes` (só ADMIN) |
 
 ## Estrutura
 ```
@@ -25,6 +26,7 @@ src/
   pages/       páginas públicas
   pages/admin/ área administrativa
 .github/workflows/manter-ativo.yml   evita a pausa do Supabase grátis
+.github/workflows/verificar.yml      confere TypeScript e build a cada envio
 ```
 
 ## Configuração

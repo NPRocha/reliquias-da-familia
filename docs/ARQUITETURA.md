@@ -31,7 +31,10 @@ WhatsApp (link wa.me com mensagem pronta) → negociação
 | 5 | Hospedagem | **Cloudflare Pages (grátis)** | Permite uso comercial no plano grátis; HTTPS e CDN inclusos. Vercel Hobby proíbe anunciar venda de produtos. |
 | 6 | Código-fonte | **GitHub (repositório privado, grátis)** | Versionamento e publicação automática no Cloudflare a cada alteração. |
 | 7 | Venda | **"Tenho interesse"** → grava em `interesses` → abre WhatsApp com mensagem pronta | Sem carrinho/pagamento; negociação humana. |
-| 8 | Login | Só a **equipe** (ADMIN/OPERADOR) tem conta | Visitante não precisa se cadastrar. |
+| 8 | Login | **ADMIN, OPERADOR e VISITANTE**, pré-cadastrados pelo ADMIN; senha criada pelo próprio usuário com **código de 6 dígitos** (função `fn_primeiro_acesso`) | Sem e-mails nem chave secreta; o ADMIN controla o acesso pelo cadastro. |
+| 10 | Chave de vendas | `configuracoes.vendas_ativas` (só ADMIN). Desligada: site só com login, sem nada de venda. Ligada: público e visitantes veem só peças "À venda" | O sistema começa como acervo da família; a venda é opcional. |
+| 11 | Leitura do site | Visão `catalogo` aplica as regras da chave; tabela `objetos` só para a equipe | Uma regra só, garantida pelo banco. |
+| 12 | Fotos | Privadas (endereços temporários), máx. 4 por peça, 500 KB por arquivo | O site exige login; as fotos acompanham a regra. |
 | 9 | Domínio | Opcional: `.com.br` no Registro.br (~R$ 40/ano) | Sem domínio, o site fica em `reliquias-da-familia.pages.dev`. |
 
 iCloud e Microsoft 365 não hospedam aplicações web; o e-mail do M365 pode ser usado como contato.
