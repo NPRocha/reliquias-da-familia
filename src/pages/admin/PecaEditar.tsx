@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type DragEvent, type FormEvent } from 'react'
 import { Foto, Mensagem, ok, useConsulta, useTitulo } from '../../components/comuns'
-import { useAuth } from '../../lib/auth'
+import { useConfig } from '../../lib/config'
 import { ROTULO_SITUACAO, identificacao, lerValor } from '../../lib/formato'
 import { prepararFoto } from '../../lib/imagem'
 import { Link, navegar, useLocalizacao } from '../../lib/rotas'
-import { BUCKET_OBJETOS, caminhoMiniatura, mensagemErro, supabase, urlFoto } from '../../lib/supabase'
+import { BUCKET_OBJETOS, caminhoMiniatura, mensagemErro, supabase } from '../../lib/supabase'
 import type { Categoria, EstadoConservacao, Imagem, Objeto, Situacao } from '../../lib/tipos'
 
 interface Form {
@@ -36,7 +36,7 @@ const valorParaTexto = (v: number | null) => (v == null ? '' : v.toFixed(2).repl
 export function PecaEditar({ id }: { id: string }) {
   const nova = id === 'nova'
   const objetoId = nova ? null : Number(id)
-  const { sessao } = useAuth()
+  const { config } = useConfig()
   const { busca } = useLocalizacao()
   const [form, setForm] = useState<Form>(VAZIO)
   const [salvando, setSalvando] = useState(false)
@@ -95,12 +95,12 @@ export function PecaEditar({ id }: { id: string }) {
     }
     setSalvando(true)
     if (nova) {
-      const { data, error } = await supabase.from('objetos').insert({ ...dados, criado_por: sessao?.user.id }).select('id').single()
+      const { data, error } = await supabase.from('objetos').insert(dados).select('id').single()
       setSalvando(false)
       if (error) return setErro(mensagemErro(error))
       navegar(`/admin/pecas/${data.id}?criada=1`, true)
     } else {
-      const { error } = await supabase.from('objetos').update({ ...dados, atualizado_por: sessao?.user.id }).eq('id', objetoId!)
+      const { error } = await supabase.from('objetos').update(dados).eq('id', objetoId!)
       setSalvando(false)
       if (error) return setErro(mensagemErro(error))
       setAviso('Alterações salvas.')
@@ -115,7 +115,7 @@ export function PecaEditar({ id }: { id: string }) {
     if (error) {
       return setErro(
         error.code === '23503'
-          ? 'Esta peça tem interesses registrados e não pode ser excluída. Para tirá-la do site, desmarque “Mostrar no site”.'
+          ? 'Esta peça tem interesses registrados e não pode ser excluída. Para tirá-la do site, desmarque “Visível no site”.'
           : mensagemErro(error),
       )
     }
@@ -136,7 +136,7 @@ export function PecaEditar({ id }: { id: string }) {
         {!nova && objeto.dados && (
           <span style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <span className="etiqueta">{identificacao(objeto.dados)}</span>
-            {objeto.dados.publico && <a href={`/peca/${objetoId}`} target="_blank" rel="noopener">Ver no site</a>}
+            
           </span>
         )}
       </div>
@@ -210,34 +210,38 @@ export function PecaEditar({ id }: { id: string }) {
         </section>
 
         <section className="adm-bloco">
-          <h2>Venda e visibilidade</h2>
+          <h2>Valores, venda e visibilidade</h2>
           <div className="campos campos--2">
             <div className="campo">
               <label htmlFor="p-sit">Situação</label>
               <select id="p-sit" {...campo('situacao')}>
                 {Object.entries(ROTULO_SITUACAO).map(([v, r]) => <option key={v} value={v}>{r}</option>)}
               </select>
-              <span className="ajuda">Só peças “À venda” exibem o botão “Tenho interesse”.</span>
+              <span className="ajuda">
+                {config.vendas_ativas
+                  ? 'Só peças “À venda” aparecem para o público, com o botão “Tenho interesse”.'
+                  : 'Vendas desligadas: pode preencher agora; nada de venda aparece no site até a chave ser ligada.'}
+              </span>
             </div>
             <div className="campo" style={{ alignContent: 'center' }}>
               <label className="check">
                 <input type="checkbox" checked={form.publico} onChange={(e) => setForm((f) => ({ ...f, publico: e.target.checked }))} />
-                Mostrar no site
+                Visível no site
               </label>
             </div>
             <div className="campo">
               <label htmlFor="p-vv">Valor de venda (R$)</label>
               <input id="p-vv" type="text" inputMode="decimal" {...campo('valor_venda')} placeholder="0,00" />
-              <span className="ajuda">Aparece no site quando a peça está à venda.</span>
+              <span className="ajuda">Aparece no site só com as vendas ligadas e a peça “À venda”.</span>
             </div>
             <div className="campo">
               <label htmlFor="p-ve">Valor estimado (R$)</label>
               <input id="p-ve" type="text" inputMode="decimal" {...campo('valor_estimado')} placeholder="0,00" />
-              <span className="ajuda">Uso interno. Nunca aparece no site.</span>
+              <span className="ajuda">Valor patrimonial. Família e convidados veem enquanto as vendas estiverem desligadas; o público nunca vê.</span>
             </div>
             <div className="campo campo--largo">
               <label htmlFor="p-obs">Observações internas</label>
-              <textarea id="p-obs" {...campo('observacoes_internas')} placeholder="Anotações da família. Nunca aparecem no site." />
+              <textarea id="p-obs" {...campo('observacoes_internas')} placeholder="Só a equipe vê. Nunca aparecem no site." />
             </div>
           </div>
         </section>
@@ -256,6 +260,8 @@ export function PecaEditar({ id }: { id: string }) {
 
 /* ---------------------------------------------------------------- Fotos */
 
+const MAX_FOTOS = 4
+
 function Fotos({ objetoId, nomePeca }: { objetoId: number; nomePeca: string }) {
   const { dados, erro, recarregar } = useConsulta(
     async () => (ok(await supabase.from('imagens_objetos').select('*').eq('objeto_id', objetoId).order('ordem').order('id')) ?? []) as Imagem[],
@@ -267,10 +273,14 @@ function Fotos({ objetoId, nomePeca }: { objetoId: number; nomePeca: string }) {
   const entrada = useRef<HTMLInputElement>(null)
   const fotos = dados ?? []
 
+  const vagas = Math.max(0, MAX_FOTOS - fotos.length)
+
   async function enviar(arquivos: FileList | File[]) {
-    const lista = Array.from(arquivos).filter((a) => a.type.startsWith('image/'))
-    if (!lista.length) return
+    const todas = Array.from(arquivos).filter((a) => a.type.startsWith('image/'))
+    if (!todas.length) return
     setFalha('')
+    const lista = todas.slice(0, vagas)
+    if (!lista.length) return setFalha(`Cada peça pode ter no máximo ${MAX_FOTOS} fotos.`)
     let ordem = fotos.reduce((m, f) => Math.max(m, f.ordem), -1)
     let temPrincipal = fotos.some((f) => f.principal)
     const erros: string[] = []
@@ -297,6 +307,7 @@ function Fotos({ objetoId, nomePeca }: { objetoId: number; nomePeca: string }) {
       }
     }
     setProgresso('')
+    if (todas.length > lista.length) erros.push(`${todas.length - lista.length} foto(s) não enviada(s): o limite é ${MAX_FOTOS} por peça`)
     if (erros.length) setFalha('Não foi possível enviar: ' + erros.join(' · '))
     if (entrada.current) entrada.current.value = ''
     recarregar()
@@ -348,23 +359,29 @@ function Fotos({ objetoId, nomePeca }: { objetoId: number; nomePeca: string }) {
 
   return (
     <section className="adm-bloco">
-      <h2>Fotos</h2>
+      <h2>Fotos <span className="ajuda">({fotos.length} de {MAX_FOTOS})</span></h2>
+      {vagas > 0 ? (
       <label
         className={`enviar-fotos${arrastando ? ' arrastando' : ''}`}
         onDragOver={(e) => { e.preventDefault(); setArrastando(true) }}
         onDragLeave={() => setArrastando(false)}
         onDrop={soltar}
       >
-        <input ref={entrada} type="file" accept="image/*" multiple disabled={!!progresso} onChange={(e) => e.target.files && enviar(e.target.files)} />
+        <input ref={entrada} type="file" accept="image/*" multiple={vagas > 1} disabled={!!progresso} onChange={(e) => e.target.files && enviar(e.target.files)} />
         <strong>{progresso || 'Clique para escolher fotos ou arraste-as para cá'}</strong>
-        <span style={{ fontSize: '0.85rem' }}>As fotos são reduzidas automaticamente antes do envio.</span>
+        <span style={{ fontSize: '0.85rem' }}>
+          {vagas === 1 ? 'Falta 1 foto' : `Faltam ${vagas} fotos`} para o limite. Cada foto é reduzida para até 1600 px e 500 KB (original até 20 MB).
+        </span>
       </label>
+      ) : (
+        <p className="ajuda" style={{ margin: 0 }}>Limite de {MAX_FOTOS} fotos atingido. Exclua uma para enviar outra.</p>
+      )}
       <Mensagem tipo="erro">{falha || (erro ? mensagemErro(erro) : '')}</Mensagem>
       {fotos.length > 0 && (
         <div className="fotos-adm">
           {fotos.map((f, i) => (
             <div key={f.id} className={`foto-adm${f.principal ? ' principal' : ''}`}>
-              <Foto src={urlFoto(f.caminho_storage, true)} alt={f.legenda || `${nomePeca} — foto ${i + 1}`} />
+              <Foto caminho={f.caminho_storage} miniatura alt={f.legenda || `${nomePeca} — foto ${i + 1}`} />
               <div className="corpo">
                 <input type="text" aria-label={`Legenda da foto ${i + 1}`} placeholder="Legenda (opcional)" defaultValue={f.legenda ?? ''} onBlur={(e) => salvarLegenda(f, e.target.value)} />
                 <div className="botoes">

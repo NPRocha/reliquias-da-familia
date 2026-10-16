@@ -326,6 +326,84 @@ a.numero:hover { outline: 1px solid var(--linha); }
 .cartao-interesse blockquote { margin: 0; padding-left: 12px; border-left: 2px solid var(--linha); font-family: var(--serif); white-space: pre-line; }
 .cartao-interesse .edicao { display: grid; grid-template-columns: 180px 160px minmax(0, 1fr) auto; gap: 10px; align-items: end; }
 
+/* ---------- Tela de entrada ("caixa de memórias") ---------- */
+.entrada {
+  min-height: 100vh; display: grid; place-items: center;
+  padding: clamp(32px, 6vw, 72px) var(--margem);
+  background-color: var(--papel);
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(176, 141, 87, 0.10), transparent 42%),
+    radial-gradient(circle at 85% 80%, rgba(62, 44, 35, 0.06), transparent 45%);
+}
+.entrada-miolo {
+  width: 100%; max-width: 1100px; display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: clamp(32px, 6vw, 72px); align-items: center;
+}
+.entrada-apresentacao { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; }
+.entrada-apresentacao h1 { font-size: clamp(2.6rem, 6vw, 4.6rem); font-weight: 400; letter-spacing: -0.02em; line-height: 1.02; }
+.entrada-sobretitulo { margin: 0; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--tinta-2); }
+.entrada-frase { margin: 0; max-width: 30em; font-family: var(--serif); font-style: italic; font-size: clamp(1.1rem, 2vw, 1.35rem); line-height: 1.55; color: var(--tinta-2); }
+.entrada-fio { width: 64px; height: 1px; background: var(--latao); }
+.entrada-vendas { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.entrada-vendas p { margin: 0; font-size: 1.1rem; }
+.entrada-nota { font-size: 0.88rem; color: var(--tinta-2); }
+
+.retrato { position: relative; width: 210px; aspect-ratio: 168 / 212; flex-shrink: 0; }
+.retrato-foto {
+  position: absolute; left: 11.9%; top: 9.43%; width: 76.2%; height: 81.1%;
+  border-radius: 50%; overflow: hidden; background: var(--folha);
+}
+.retrato-foto img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; opacity: 0.9; }
+.retrato svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.ficha-entrada {
+  position: relative; background: var(--folha); border: 1px solid var(--linha);
+  padding: 44px 40px 32px; display: flex; flex-direction: column; gap: 18px;
+}
+.ficha-entrada hr { width: 100%; border: 0; border-top: 1px solid var(--linha); margin: 0; }
+.cantoneira { position: absolute; width: 0; height: 0; border: 0 solid transparent; }
+.cantoneira--1 { top: -1px; left: -1px; border-top: 30px solid var(--tinta); border-right-width: 30px; }
+.cantoneira--2 { top: -1px; right: -1px; border-top: 30px solid var(--tinta); border-left-width: 30px; }
+.cantoneira--3 { bottom: -1px; left: -1px; border-bottom: 30px solid var(--tinta); border-right-width: 30px; }
+.cantoneira--4 { bottom: -1px; right: -1px; border-bottom: 30px solid var(--tinta); border-left-width: 30px; }
+.entrada-titulo h2 { font-size: 1.9rem; margin-bottom: 8px; }
+.entrada-titulo p { margin: 0; color: var(--tinta-2); line-height: 1.5; }
+.entrada-links { display: flex; justify-content: center; gap: 10px; font-size: 0.95rem; color: var(--tinta-2); }
+.entrada-aviso { margin: 0; text-align: center; font-size: 0.9rem; color: var(--tinta-2); }
+
+@media (max-width: 860px) {
+  .entrada-miolo { grid-template-columns: 1fr; }
+  .entrada-apresentacao { align-items: center; text-align: center; }
+  .entrada-vendas { align-items: center; }
+  .retrato { width: 128px; }
+  .ficha-entrada { padding: 32px 22px 24px; }
+}
+
+/* ---------- Complementos ---------- */
+.botao--grande { min-height: 48px; padding: 12px 24px; font-size: 1rem; }
+.botao--escuro { background: var(--tinta); border-color: var(--tinta); color: var(--folha); }
+.botao--escuro:hover { background: #523d31; border-color: #523d31; color: #fff; }
+.nav-botao {
+  color: var(--tinta-2); font: 500 1rem var(--sans); padding: 8px 12px; border: 0;
+  background: none; cursor: pointer; border-radius: var(--r-pequeno);
+}
+.nav-botao:hover { color: var(--tinta); background: var(--folha); }
+.moldura--carregando { background: linear-gradient(100deg, var(--folha) 40%, #f3ede2 50%, var(--folha) 60%) 0 0 / 200% 100%; animation: brilho 1.4s linear infinite; }
+@keyframes brilho { to { background-position: -200% 0; } }
+.introducao { font-family: var(--serif); font-style: italic; font-size: 1.15rem; color: var(--tinta-2); margin: 0 0 28px; }
+h2 .ajuda { font-family: var(--sans); font-size: 0.85rem; font-weight: 400; }
+
+.adm-vendas { font-size: 0.82rem; padding: 6px 10px; margin: 0 0 4px; border-radius: var(--r-pequeno); color: #dccfbd; border: 1px solid #6b5a4e; }
+.adm-vendas--ligadas { color: var(--tinta); background: var(--latao); border-color: var(--latao); font-weight: 600; }
+.chave-vendas { display: flex; gap: 20px; align-items: center; justify-content: space-between; flex-wrap: wrap; border: 1px solid var(--linha); }
+.chave-vendas--ligada { border-color: var(--latao); box-shadow: inset 4px 0 0 var(--latao); }
+.chave-vendas h2 { margin-bottom: 6px; }
+.acoes-reserva { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.codigo-acesso { border: 1px solid var(--latao); }
+.codigo { font: 600 2.4rem/1 var(--sans); letter-spacing: 0.3em; margin: 4px 0 8px; font-variant-numeric: tabular-nums; }
+.convite { white-space: pre-wrap; font: 0.92rem/1.5 var(--sans); background: #fff; border: 1px solid var(--linha); border-radius: var(--r-pequeno); padding: 12px 14px; margin: 12px 0 0; }
+
 /* ---------- Responsivo ---------- */
 @media (max-width: 860px) {
   .abertura, .peca, .sobre { grid-template-columns: 1fr; }

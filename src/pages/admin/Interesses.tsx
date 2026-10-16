@@ -3,9 +3,11 @@ import { Mensagem, ok, useConsulta, useTitulo } from '../../components/comuns'
 import { ROTULO_INTERESSE, formatarData, formatarTelefone, formatarValor, identificacao, lerValor, linkWhatsApp } from '../../lib/formato'
 import { Link } from '../../lib/rotas'
 import { mensagemErro, supabase } from '../../lib/supabase'
-import type { Interesse, SituacaoInteresse } from '../../lib/tipos'
+import type { Interesse, Situacao, SituacaoInteresse } from '../../lib/tipos'
 
-type Linha = Interesse & { objetos: { id: number; nome: string; codigo: string | null; situacao: string } | null }
+type Linha = Interesse & {
+  objetos: { id: number; nome: string; codigo: string | null; situacao: Situacao; reservado_para: number | null } | null
+}
 
 const ABERTOS: SituacaoInteresse[] = ['NOVO', 'EM_CONTATO', 'NEGOCIANDO']
 
@@ -14,7 +16,7 @@ export function Interesses() {
   const [filtro, setFiltro] = useState<'abertos' | 'todos' | SituacaoInteresse>('abertos')
 
   const { dados, erro, carregando, recarregar } = useConsulta(async () => {
-    let q = supabase.from('interesses').select('*,objetos(id,nome,codigo,situacao)')
+    let q = supabase.from('interesses').select('*,objetos(id,nome,codigo,situacao,reservado_para)')
     if (filtro === 'abertos') q = q.in('situacao', ABERTOS)
     else if (filtro !== 'todos') q = q.eq('situacao', filtro)
     return (ok(await q.order('criado_em', { ascending: false })) ?? []) as unknown as Linha[]
@@ -50,6 +52,24 @@ function CartaoInteresse({ item, aoSalvar }: { item: Linha; aoSalvar: () => void
   const primeiroNome = item.nome.split(' ')[0]
   const texto = `Olá, ${primeiroNome}! Aqui é da Relíquias da Família. Recebemos seu interesse na peça "${item.objetos?.nome ?? ''}".`
 
+  async function acao(funcao: 'fn_reservar' | 'fn_concluir_venda' | 'fn_desistencia', pergunta: string) {
+    if (!confirm(pergunta)) return
+    setSalvando(true)
+    setMsg(null)
+    const { error } = await supabase.rpc(funcao, { p_interesse: item.id })
+    setSalvando(false)
+    if (error) return setMsg({ tipo: 'erro', texto: mensagemErro(error) })
+    aoSalvar()
+  }
+
+  const obj = item.objetos
+  const reservadaParaEste = obj?.situacao === 'RESERVADO' && obj.reservado_para === item.id
+  const aberto = item.situacao !== 'CONCLUIDO' && item.situacao !== 'DESCARTADO'
+  let avisoPeca = ''
+  if (aberto && obj?.situacao === 'RESERVADO' && !reservadaParaEste) avisoPeca = 'Peça reservada para outro interessado. Avise que, por enquanto, ela não está disponível.'
+  else if (aberto && obj?.situacao === 'VENDIDO') avisoPeca = 'Peça já vendida. Avise que, infelizmente, ela não está mais disponível.'
+  else if (aberto && obj && obj.situacao === 'ACERVO') avisoPeca = 'A peça não está mais à venda.'
+
   async function salvar() {
     const v = lerValor(valor)
     if (valor.trim() && v == null) return setMsg({ tipo: 'erro', texto: 'Valor inválido.' })
@@ -75,6 +95,30 @@ function CartaoInteresse({ item, aoSalvar }: { item: Linha; aoSalvar: () => void
         {item.valor_proposto != null && <> · Proposta {formatarValor(item.valor_proposto)}</>}
       </div>
       {item.mensagem && <blockquote>{item.mensagem}</blockquote>}
+      {avisoPeca && <p className="aviso-situacao" style={{ margin: 0 }}>{avisoPeca}</p>}
+      {aberto && obj && (obj.situacao === 'A_VENDA' || reservadaParaEste) && (
+        <div className="acoes-reserva">
+          {obj.situacao === 'A_VENDA' && (
+            <button type="button" className="botao botao--pequeno" disabled={salvando}
+              onClick={() => acao('fn_reservar', `Reservar "${obj.nome}" para ${item.nome}? A peça sai do site e ninguém mais poderá registrar interesse nela.`)}>
+              Reservar peça
+            </button>
+          )}
+          {reservadaParaEste && (
+            <>
+              <span className="selo selo--RESERVADO">Reservada para este interessado</span>
+              <button type="button" className="botao botao--pequeno" disabled={salvando}
+                onClick={() => acao('fn_concluir_venda', `Confirmar a venda de "${obj.nome}" para ${item.nome}?`)}>
+                Concluir venda
+              </button>
+              <button type="button" className="botao botao--perigo botao--pequeno" disabled={salvando}
+                onClick={() => acao('fn_desistencia', `Registrar desistência de ${item.nome}? A peça volta a ficar à venda no site.`)}>
+                Desistência
+              </button>
+            </>
+          )}
+        </div>
+      )}
       <div className="edicao">
         <div className="campo">
           <label htmlFor={`s-${item.id}`}>Situação</label>

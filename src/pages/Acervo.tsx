@@ -1,21 +1,20 @@
 import { useEffect, useState } from 'react'
-import { CartaoPeca, SELECT_CARTAO, type PecaComFoto } from '../components/CartaoPeca'
+import { CartaoPeca, COLUNAS_CATALOGO, comCapas } from '../components/CartaoPeca'
 import { Mensagem, ok, useConsulta, useTitulo } from '../components/comuns'
+import { texto as textoConfig, useConfig } from '../lib/config'
 import { navegar, useLocalizacao } from '../lib/rotas'
 import { mensagemErro, supabase } from '../lib/supabase'
-import type { Categoria, Situacao } from '../lib/tipos'
+import type { Categoria, ObjetoCatalogo } from '../lib/tipos'
 
-const FILTROS_SITUACAO: { valor: Situacao | ''; rotulo: string }[] = [
-  { valor: '', rotulo: 'Todas' },
-  { valor: 'A_VENDA', rotulo: 'À venda' },
-  { valor: 'ACERVO', rotulo: 'Acervo da família' },
-  { valor: 'VENDIDO', rotulo: 'Vendidas' },
-]
-
+/**
+ * Lista de peças. Vendas desligadas: o acervo da família (só com login).
+ * Vendas ligadas: só as peças à venda, para o público e os visitantes.
+ */
 export function Acervo() {
-  useTitulo('Acervo')
+  const { config } = useConfig()
+  const vendas = config.vendas_ativas
+  useTitulo(vendas ? 'Peças disponíveis' : 'Acervo')
   const { busca } = useLocalizacao()
-  const situacao = (busca.get('situacao') || '') as Situacao | ''
   const categoria = busca.get('categoria') || ''
   const termo = busca.get('q') || ''
   const [texto, setTexto] = useState(termo)
@@ -37,30 +36,22 @@ export function Acervo() {
   }, [])
 
   const pecas = useConsulta(async () => {
-    let q = supabase.from('objetos').select(SELECT_CARTAO).eq('publico', true)
-    if (situacao === 'A_VENDA') q = q.in('situacao', ['A_VENDA', 'RESERVADO'])
-    else if (situacao) q = q.eq('situacao', situacao)
+    let q = supabase.from('catalogo').select(COLUNAS_CATALOGO)
     if (categoria) q = q.eq('categoria_id', Number(categoria))
     if (termo) q = q.ilike('nome', `%${termo.replace(/[%_]/g, '')}%`)
-    return (ok(await q.order('criado_em', { ascending: false })) ?? []) as PecaComFoto[]
-  }, [situacao, categoria, termo])
+    return comCapas((ok(await q.order('criado_em', { ascending: false })) ?? []) as ObjetoCatalogo[])
+  }, [categoria, termo, vendas])
 
   const lista = pecas.dados ?? []
 
   return (
     <>
-      <div className="secao-topo" style={{ marginTop: 48 }}>
-        <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)' }}>Acervo</h1>
+      <div className="secao-topo" style={{ marginTop: 48, marginBottom: vendas ? 8 : 24 }}>
+        <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)' }}>{vendas ? 'Peças disponíveis' : 'Acervo'}</h1>
       </div>
+      {vendas && <p className="introducao">{textoConfig(config, 'vendas_texto')}</p>}
 
       <div className="filtros">
-        <div className="chips" role="group" aria-label="Situação">
-          {FILTROS_SITUACAO.map((f) => (
-            <button key={f.valor} type="button" className="chip" aria-pressed={situacao === f.valor} onClick={() => aplicar({ situacao: f.valor })}>
-              {f.rotulo}
-            </button>
-          ))}
-        </div>
         {(categorias.dados?.length ?? 0) > 0 && (
           <select aria-label="Categoria" value={categoria} onChange={(e) => aplicar({ categoria: e.target.value })} style={{ width: 'auto' }}>
             <option value="">Todas as categorias</option>
@@ -85,8 +76,10 @@ export function Acervo() {
         <p className="carregando">Procurando…</p>
       ) : lista.length === 0 ? (
         <p className="vazio">
-          Nenhuma peça encontrada com esses filtros.{' '}
-          <button type="button" className="chip" onClick={() => aplicar({ situacao: '', categoria: '', q: '' })}>Limpar filtros</button>
+          {categoria || termo ? 'Nenhuma peça encontrada com esses filtros. ' : vendas ? 'No momento não há peças disponíveis.' : 'As primeiras peças estão sendo catalogadas.'}
+          {(categoria || termo) && (
+            <button type="button" className="chip" onClick={() => aplicar({ categoria: '', q: '' })}>Limpar filtros</button>
+          )}
         </p>
       ) : (
         <div className="grade">{lista.map((p) => <CartaoPeca key={p.id} peca={p} />)}</div>

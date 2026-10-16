@@ -1,10 +1,20 @@
 import type { ReactNode } from 'react'
-import { Link, useLocalizacao } from '../lib/rotas'
+import { useAuth } from '../lib/auth'
+import { useConfig } from '../lib/config'
+import { Link, navegar, useLocalizacao } from '../lib/rotas'
 
 export function LayoutPublico({ children }: { children: ReactNode }) {
   const { caminho } = useLocalizacao()
+  const { sessao, perfil, equipe, sair } = useAuth()
+  const { config } = useConfig()
   const atual = (p: string) => (caminho === p || caminho.startsWith(p + '/') ? 'page' : undefined)
+  const naPeca = caminho.startsWith('/peca/') ? 'page' : undefined
   const ano = new Date().getFullYear()
+
+  async function aoSair() {
+    await sair()
+    navegar('/')
+  }
 
   return (
     <>
@@ -13,8 +23,20 @@ export function LayoutPublico({ children }: { children: ReactNode }) {
         <div className="miolo">
           <Link href="/" className="marca">Relíquias da Família</Link>
           <nav className="nav" aria-label="Principal">
-            <Link href="/acervo" aria-current={atual('/acervo') ?? (caminho.startsWith('/peca/') ? 'page' : undefined)}>Acervo</Link>
-            <Link href="/sobre" aria-current={atual('/sobre')}>Sobre</Link>
+            {config.vendas_ativas ? (
+              <Link href="/acervo" aria-current={atual('/acervo') ?? naPeca}>Peças disponíveis</Link>
+            ) : (
+              <>
+                <Link href="/acervo" aria-current={atual('/acervo') ?? naPeca}>Acervo</Link>
+                <Link href="/sobre" aria-current={atual('/sobre')}>Sobre</Link>
+              </>
+            )}
+            {equipe && <Link href="/admin">Administração</Link>}
+            {sessao ? (
+              <button type="button" className="nav-botao" onClick={aoSair}>Sair</button>
+            ) : (
+              <Link href="/">Entrar</Link>
+            )}
           </nav>
         </div>
       </header>
@@ -22,9 +44,7 @@ export function LayoutPublico({ children }: { children: ReactNode }) {
       <footer className="rodape">
         <div className="miolo">
           <span>© {ano} Relíquias da Família</span>
-          <span>
-            <Link href="/sobre">Contato</Link> · <Link href="/admin">Área da família</Link>
-          </span>
+          {perfil && <span>{perfil.nome}</span>}
         </div>
       </footer>
     </>

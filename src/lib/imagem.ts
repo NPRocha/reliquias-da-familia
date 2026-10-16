@@ -44,12 +44,33 @@ export interface FotoPreparada {
   miniatura: Blob
 }
 
-/** Grande: até 1600 px (~200–400 KB). Miniatura: até 480 px (~30–60 KB). */
+/** Limites: foto original até 20 MB; arquivo enviado até 500 KB (o banco recusa acima disso). */
+export const LIMITE_ORIGINAL = 20 * 1024 * 1024
+export const LIMITE_FOTO = 500 * 1024
+
+/** Gera a foto e, se passar do limite, reduz qualidade e depois tamanho até caber. */
+async function gerarAte(fonte: ImageBitmap | HTMLImageElement, ladoMax: number, qualidade: number, limite: number): Promise<Blob> {
+  let lado = ladoMax
+  let q = qualidade
+  for (let i = 0; i < 8; i++) {
+    const blob = await gerar(fonte, lado, q)
+    if (blob.size <= limite) return blob
+    if (q > 0.62) q -= 0.08
+    else lado = Math.round(lado * 0.85)
+  }
+  throw new Error('Não foi possível reduzir a foto para 500 KB.')
+}
+
+/** Grande: até 1600 px e 500 KB (nítida para reconhecer a peça). Miniatura: até 480 px. */
 export async function prepararFoto(arquivo: File): Promise<FotoPreparada> {
   if (!arquivo.type.startsWith('image/')) throw new Error(`"${arquivo.name}" não é uma imagem.`)
+  if (arquivo.size > LIMITE_ORIGINAL) throw new Error(`"${arquivo.name}" tem mais de 20 MB. Use uma foto menor.`)
   const fonte = await carregar(arquivo)
-  const grande = await gerar(fonte, 1600, 0.82)
-  const miniatura = await gerar(fonte, 480, 0.75)
-  if ('close' in fonte) fonte.close()
-  return { grande, miniatura }
+  try {
+    const grande = await gerarAte(fonte, 1600, 0.82, LIMITE_FOTO)
+    const miniatura = await gerarAte(fonte, 480, 0.75, 120 * 1024)
+    return { grande, miniatura }
+  } finally {
+    if ('close' in fonte) fonte.close()
+  }
 }

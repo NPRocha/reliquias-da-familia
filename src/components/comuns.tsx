@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type DependencyList, type ReactNode } from 'react'
 import { ROTULO_SITUACAO } from '../lib/formato'
+import { BUCKET_OBJETOS, caminhoMiniatura, urlAssinada } from '../lib/supabase'
 import type { Situacao } from '../lib/tipos'
 
 export function Etiqueta({ texto, grande = false }: { texto: string; grande?: boolean }) {
@@ -16,9 +17,36 @@ export function Carimbo({ situacao, grande = false }: { situacao: Situacao; gran
   )
 }
 
-export function Foto({ src, alt, className = '' }: { src: string | null; alt: string; className?: string }) {
-  const [falhou, setFalhou] = useState(false)
-  if (!src || falhou) {
+/** Endereço temporário de uma foto privada (undefined enquanto carrega). */
+export function useUrlFoto(caminho: string | null | undefined, bucket = BUCKET_OBJETOS): string | null | undefined {
+  const [url, setUrl] = useState<{ de: string; url: string | null } | null>(null)
+  useEffect(() => {
+    if (!caminho) return
+    let ativo = true
+    urlAssinada(bucket, caminho).then((u) => ativo && setUrl({ de: caminho, url: u }))
+    return () => {
+      ativo = false
+    }
+  }, [bucket, caminho])
+  if (!caminho) return null
+  return url?.de === caminho ? url.url : undefined
+}
+
+interface FotoProps {
+  /** Caminho do arquivo no Storage (bucket "objetos" por padrão). */
+  caminho: string | null | undefined
+  alt: string
+  miniatura?: boolean
+  bucket?: string
+  className?: string
+}
+
+export function Foto({ caminho, alt, miniatura = false, bucket = BUCKET_OBJETOS, className = '' }: FotoProps) {
+  const arquivo = caminho ? (miniatura ? caminhoMiniatura(caminho) : caminho) : null
+  const src = useUrlFoto(arquivo, bucket)
+  const [falhou, setFalhou] = useState<string | null>(null)
+  if (src === undefined) return <div className={`moldura moldura--carregando ${className}`} aria-busy="true" />
+  if (!src || falhou === src) {
     return (
       <div className={`moldura moldura--vazia ${className}`} role="img" aria-label={`${alt} — sem foto`}>
         <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -31,7 +59,7 @@ export function Foto({ src, alt, className = '' }: { src: string | null; alt: st
   }
   return (
     <div className={`moldura ${className}`}>
-      <img src={src} alt={alt} loading="lazy" decoding="async" onError={() => setFalhou(true)} />
+      <img src={src} alt={alt} loading="lazy" decoding="async" onError={() => setFalhou(src)} />
     </div>
   )
 }

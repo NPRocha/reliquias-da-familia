@@ -3,7 +3,7 @@ import { fotoCapa } from '../../components/CartaoPeca'
 import { Foto, Mensagem, ok, useConsulta, useTitulo } from '../../components/comuns'
 import { ROTULO_SITUACAO, formatarValor, identificacao } from '../../lib/formato'
 import { Link, navegar, useLocalizacao } from '../../lib/rotas'
-import { mensagemErro, supabase, urlFoto } from '../../lib/supabase'
+import { mensagemErro, supabase } from '../../lib/supabase'
 import type { Objeto, Situacao } from '../../lib/tipos'
 
 type Linha = Objeto & {
@@ -50,12 +50,12 @@ export function Pecas() {
         <div className="tabela-envelope">
           <table className="tabela">
             <thead>
-              <tr><th className="mini"><span className="pular">Foto</span></th><th>Peça</th><th>Categoria</th><th>Situação</th><th>Valor de venda</th><th>No site</th></tr>
+              <tr><th className="mini"><span className="pular">Foto</span></th><th>Peça</th><th>Categoria</th><th>Situação</th><th>Valor de venda</th><th>Visível no site</th></tr>
             </thead>
             <tbody>
               {lista.map((p) => (
                 <tr key={p.id}>
-                  <td className="mini"><Foto src={urlFoto(fotoCapa(p), true)} alt="" /></td>
+                  <td className="mini"><Foto caminho={fotoCapa(p.imagens_objetos)} miniatura alt="" /></td>
                   <td>
                     <Link href={`/admin/pecas/${p.id}`} className="linha-titulo">{p.nome}</Link>
                     <div style={{ color: 'var(--tinta-2)', fontSize: '0.82rem' }}>{identificacao(p)}</div>

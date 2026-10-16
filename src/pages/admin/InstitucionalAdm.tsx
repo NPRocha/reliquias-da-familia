@@ -1,17 +1,16 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Foto, Mensagem, ok, useConsulta, useTitulo } from '../../components/comuns'
-import { formatarTelefone, soDigitos } from '../../lib/formato'
 import { prepararFoto } from '../../lib/imagem'
-import { BUCKET_INSTITUCIONAL, mensagemErro, supabase, urlImagem } from '../../lib/supabase'
+import { BUCKET_INSTITUCIONAL, mensagemErro, supabase } from '../../lib/supabase'
 import type { Institucional } from '../../lib/tipos'
 
 export function InstitucionalAdm() {
   useTitulo('Página Sobre')
   const { dados, erro, carregando, recarregar } = useConsulta(
-    async () => ok(await supabase.from('institucional').select('*').eq('id', 1).maybeSingle()) as Institucional | null,
+    async () => ok(await supabase.from('institucional').select('id,nome_responsavel,titulo,apresentacao,curriculo,foto_caminho,email,atualizado_em').eq('id', 1).maybeSingle()) as Institucional | null,
     [],
   )
-  const [f, setF] = useState({ nome_responsavel: '', titulo: '', apresentacao: '', curriculo: '', whatsapp: '', email: '' })
+  const [f, setF] = useState({ nome_responsavel: '', titulo: '', apresentacao: '', curriculo: '', email: '' })
   const [msg, setMsg] = useState<{ tipo: 'erro' | 'ok'; texto: string } | null>(null)
   const [salvando, setSalvando] = useState(false)
   const [enviandoFoto, setEnviandoFoto] = useState(false)
@@ -20,7 +19,7 @@ export function InstitucionalAdm() {
     if (!dados) return
     setF({
       nome_responsavel: dados.nome_responsavel ?? '', titulo: dados.titulo ?? '', apresentacao: dados.apresentacao ?? '',
-      curriculo: dados.curriculo ?? '', whatsapp: formatarTelefone(dados.whatsapp), email: dados.email ?? '',
+      curriculo: dados.curriculo ?? '', email: dados.email ?? '',
     })
   }, [dados])
 
@@ -29,14 +28,11 @@ export function InstitucionalAdm() {
   async function salvar(e: FormEvent) {
     e.preventDefault()
     setMsg(null)
-    let whats = soDigitos(f.whatsapp)
-    if (whats && whats.length <= 11) whats = '55' + whats
-    if (whats && (whats.length < 12 || whats.length > 13)) return setMsg({ tipo: 'erro', texto: 'WhatsApp inválido. Use DDD + número, ex.: (85) 99999-0000.' })
     const t = (s: string) => s.trim() || null
     setSalvando(true)
     const { error } = await supabase.from('institucional').update({
       nome_responsavel: t(f.nome_responsavel), titulo: t(f.titulo), apresentacao: t(f.apresentacao),
-      curriculo: t(f.curriculo), whatsapp: whats || null, email: t(f.email),
+      curriculo: t(f.curriculo), email: t(f.email),
     }).eq('id', 1)
     setSalvando(false)
     if (error) return setMsg({ tipo: 'erro', texto: mensagemErro(error) })
@@ -73,12 +69,12 @@ export function InstitucionalAdm() {
     <>
       <div className="adm-topo">
         <h1>Página Sobre</h1>
-        <a href="/sobre" target="_blank" rel="noopener">Ver no site</a>
+        <span className="ajuda">Visível para a família e convidados enquanto as vendas estiverem desligadas.</span>
       </div>
       <form onSubmit={salvar}>
         <section className="adm-bloco" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 200px) minmax(0, 1fr)', gap: 20, alignItems: 'start' }}>
           <div>
-            <Foto src={urlImagem(BUCKET_INSTITUCIONAL, dados?.foto_caminho)} alt="Foto do responsável" />
+            <Foto bucket={BUCKET_INSTITUCIONAL} caminho={dados?.foto_caminho} alt="Foto do responsável" />
             <label className="botao botao--claro botao--pequeno" style={{ marginTop: 10, width: '100%' }}>
               {enviandoFoto ? 'Enviando…' : 'Trocar foto'}
               <input type="file" accept="image/*" hidden disabled={enviandoFoto} onChange={(e) => trocarFoto(e.target.files?.[0])} />
@@ -92,11 +88,6 @@ export function InstitucionalAdm() {
             <div className="campo">
               <label htmlFor="s-titulo">Título</label>
               <input id="s-titulo" type="text" {...campo('titulo')} placeholder="Aparece no topo da página inicial" />
-            </div>
-            <div className="campo">
-              <label htmlFor="s-whats">WhatsApp para negociação</label>
-              <input id="s-whats" type="tel" {...campo('whatsapp')} placeholder="(85) 99999-0000" />
-              <span className="ajuda">Para este número os interessados serão direcionados.</span>
             </div>
             <div className="campo">
               <label htmlFor="s-email">E-mail de contato</label>

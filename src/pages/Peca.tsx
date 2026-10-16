@@ -1,66 +1,72 @@
 import { useState, type FormEvent } from 'react'
+import { COLUNAS_CATALOGO } from '../components/CartaoPeca'
 import { Carimbo, Etiqueta, Foto, Mensagem, ok, useConsulta, useTitulo } from '../components/comuns'
-import { formatarValor, identificacao, linkWhatsApp, soDigitos } from '../lib/formato'
+import { useAuth } from '../lib/auth'
+import { useConfig } from '../lib/config'
+import { formatarTelefone, formatarValor, identificacao, soDigitos } from '../lib/formato'
 import { Link } from '../lib/rotas'
-import { mensagemErro, supabase, urlFoto } from '../lib/supabase'
-import type { Imagem, ObjetoPublico } from '../lib/tipos'
-
-type PecaCompleta = ObjetoPublico & {
-  categorias: { nome: string } | null
-  estados_conservacao: { descricao: string } | null
-  imagens_objetos: Imagem[]
-}
-
-const SELECT_PECA =
-  'id,codigo,nome,descricao,historia,procedencia,ano_origem,material,dimensoes,categoria_id,estado_conservacao_id,valor_venda,situacao,publico,criado_em,' +
-  'categorias(nome),estados_conservacao(descricao),imagens_objetos(id,objeto_id,caminho_storage,legenda,ordem,principal)'
+import { mensagemErro, supabase } from '../lib/supabase'
+import type { Imagem, ObjetoCatalogo } from '../lib/tipos'
 
 export function Peca({ id }: { id: string }) {
+  const { config } = useConfig()
+  const vendas = config.vendas_ativas
   const { dados, erro, carregando } = useConsulta(async () => {
-    const [peca, inst] = await Promise.all([
-      supabase.from('objetos').select(SELECT_PECA).eq('id', Number(id)).eq('publico', true).maybeSingle(),
-      supabase.from('institucional').select('whatsapp').eq('id', 1).maybeSingle(),
+    const peca = ok(await supabase.from('catalogo').select(COLUNAS_CATALOGO).eq('id', Number(id)).maybeSingle()) as ObjetoCatalogo | null
+    if (!peca) return null
+    const [fotos, cat, est] = await Promise.all([
+      supabase.from('imagens_objetos').select('id,objeto_id,caminho_storage,legenda,ordem,principal').eq('objeto_id', peca.id),
+      peca.categoria_id ? supabase.from('categorias').select('nome').eq('id', peca.categoria_id).maybeSingle() : Promise.resolve({ data: null, error: null }),
+      peca.estado_conservacao_id
+        ? supabase.from('estados_conservacao').select('descricao').eq('id', peca.estado_conservacao_id).maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
     ])
-    return { peca: ok(peca) as unknown as PecaCompleta | null, whatsapp: (ok(inst) as { whatsapp: string | null } | null)?.whatsapp ?? null }
-  }, [id])
+    return {
+      peca,
+      fotos: ((ok(fotos) ?? []) as Imagem[]).sort((a, b) => Number(b.principal) - Number(a.principal) || a.ordem - b.ordem),
+      categoria: (ok(cat) as { nome: string } | null)?.nome ?? null,
+      conservacao: (ok(est) as { descricao: string } | null)?.descricao ?? null,
+    }
+  }, [id, vendas])
   const [atual, setAtual] = useState(0)
-  useTitulo(dados?.peca?.nome ?? 'Peça')
+  useTitulo(dados?.peca.nome ?? 'Peça')
 
   if (carregando) return <p className="carregando">Abrindo a ficha…</p>
   if (erro) return <div className="secao"><Mensagem tipo="erro">{mensagemErro(erro)}</Mensagem></div>
-  const peca = dados?.peca
-  if (!peca) {
+  if (!dados) {
     return (
       <div className="vazio">
         <p>Esta peça não está disponível para visualização.</p>
-        <Link href="/acervo" className="botao">Voltar ao acervo</Link>
+        <Link href="/acervo" className="botao">{vendas ? 'Ver peças disponíveis' : 'Voltar ao acervo'}</Link>
       </div>
     )
   }
 
-  const fotos = [...peca.imagens_objetos].sort((a, b) => Number(b.principal) - Number(a.principal) || a.ordem - b.ordem)
+  const { peca, fotos } = dados
   const foto = fotos[Math.min(atual, fotos.length - 1)]
   const ficha: [string, string | null | undefined][] = [
     ['Época', peca.ano_origem],
     ['Material', peca.material],
     ['Dimensões', peca.dimensoes],
-    ['Conservação', peca.estados_conservacao?.descricao],
-    ['Categoria', peca.categorias?.nome],
+    ['Conservação', dados.conservacao],
+    ['Categoria', dados.categoria],
     ['Procedência', peca.procedencia],
+    ['Valor estimado', peca.valor_estimado != null ? formatarValor(peca.valor_estimado) : null],
   ]
+  const aVenda = vendas && peca.situacao === 'A_VENDA'
 
   return (
     <>
-      <Link href="/acervo" className="voltar">← Voltar ao acervo</Link>
+      <Link href="/acervo" className="voltar">← {vendas ? 'Peças disponíveis' : 'Voltar ao acervo'}</Link>
       <article className="peca">
         <div className="galeria">
-          <Foto className="principal" src={urlFoto(foto?.caminho_storage)} alt={foto?.legenda || peca.nome} />
+          <Foto className="principal" caminho={foto?.caminho_storage} alt={foto?.legenda || peca.nome} />
           {foto?.legenda && <p className="legenda">{foto.legenda}</p>}
           {fotos.length > 1 && (
             <div className="miniaturas" role="group" aria-label="Fotos da peça">
               {fotos.map((f, i) => (
                 <button key={f.id} type="button" aria-current={i === atual} aria-label={`Foto ${i + 1} de ${fotos.length}`} onClick={() => setAtual(i)}>
-                  <Foto src={urlFoto(f.caminho_storage, true)} alt="" />
+                  <Foto caminho={f.caminho_storage} miniatura alt="" />
                 </button>
               ))}
             </div>
@@ -71,8 +77,8 @@ export function Peca({ id }: { id: string }) {
           <div className="peca-cabeca">
             <Etiqueta texto={identificacao(peca)} grande />
             <h1>{peca.nome}</h1>
-            <Carimbo situacao={peca.situacao} grande />
-            {peca.situacao === 'A_VENDA' && peca.valor_venda != null && <p className="peca-valor">{formatarValor(peca.valor_venda)}</p>}
+            {vendas && <Carimbo situacao={peca.situacao} grande />}
+            {aVenda && peca.valor_venda != null && <p className="peca-valor">{formatarValor(peca.valor_venda)}</p>}
           </div>
           {peca.descricao && <p className="peca-resumo" style={{ marginTop: 20 }}>{peca.descricao}</p>}
 
@@ -85,11 +91,7 @@ export function Peca({ id }: { id: string }) {
             ))}
           </dl>
 
-          {peca.situacao === 'A_VENDA' && <FormInteresse peca={peca} whatsapp={dados?.whatsapp ?? null} />}
-          {peca.situacao === 'RESERVADO' && (
-            <p className="aviso-situacao">Esta peça está reservada para um interessado. Se a negociação não avançar, ela volta a ficar disponível.</p>
-          )}
-          {peca.situacao === 'VENDIDO' && <p className="aviso-situacao">Esta peça já foi vendida e segue no acervo como registro da coleção.</p>}
+          {aVenda && <FormInteresse peca={peca} />}
         </div>
       </article>
 
@@ -103,24 +105,23 @@ export function Peca({ id }: { id: string }) {
   )
 }
 
-function FormInteresse({ peca, whatsapp }: { peca: ObjetoPublico; whatsapp: string | null }) {
-  const [nome, setNome] = useState('')
-  const [fone, setFone] = useState('')
-  const [email, setEmail] = useState('')
+function FormInteresse({ peca }: { peca: ObjetoCatalogo }) {
+  const { perfil } = useAuth()
+  const [nome, setNome] = useState(perfil?.nome ?? '')
+  const [fone, setFone] = useState(formatarTelefone(perfil?.whatsapp))
+  const [email, setEmail] = useState(perfil?.email ?? '')
   const [mensagem, setMensagem] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
   const [enviado, setEnviado] = useState(false)
 
-  const textoWhats = `Olá! Tenho interesse na peça "${peca.nome}" (${identificacao(peca)}) que vi no site Relíquias da Família: ${location.origin}/peca/${peca.id}`
-  const linkWhats = whatsapp ? linkWhatsApp(whatsapp, textoWhats) : null
-
   async function enviar(e: FormEvent) {
     e.preventDefault()
     setErro('')
-    const digitos = soDigitos(fone)
+    let digitos = soDigitos(fone)
+    if (digitos.length >= 12 && digitos.startsWith('55')) digitos = digitos.slice(2)
     if (nome.trim().length < 2) return setErro('Informe seu nome.')
-    if (digitos.length < 10 || digitos.length > 13) return setErro('Informe o WhatsApp com DDD, por exemplo (85) 99999-0000.')
+    if (digitos.length < 10 || digitos.length > 11) return setErro('Informe o WhatsApp com DDD, por exemplo (85) 99999-0000.')
     setEnviando(true)
     const { error } = await supabase.from('interesses').insert({
       objeto_id: peca.id,
@@ -130,7 +131,9 @@ function FormInteresse({ peca, whatsapp }: { peca: ObjetoPublico; whatsapp: stri
       mensagem: mensagem.trim() || null,
     })
     setEnviando(false)
-    if (error) return setErro(mensagemErro(error))
+    if (error) {
+      return setErro(error.code === '42501' ? 'Esta peça não está mais disponível para interesse.' : mensagemErro(error))
+    }
     setEnviado(true)
   }
 
@@ -138,12 +141,7 @@ function FormInteresse({ peca, whatsapp }: { peca: ObjetoPublico; whatsapp: stri
     return (
       <div className="painel-form" role="status">
         <h2>Interesse registrado</h2>
-        <p>Obrigado, {nome.split(' ')[0]}. A família vai entrar em contato pelo WhatsApp informado.</p>
-        {linkWhats && (
-          <a className="botao botao--whats" href={linkWhats} target="_blank" rel="noopener noreferrer">
-            Conversar agora pelo WhatsApp
-          </a>
-        )}
+        <p style={{ margin: 0 }}>Obrigado, {nome.trim().split(' ')[0]}. A família vai entrar em contato pelo WhatsApp informado.</p>
       </div>
     )
   }
@@ -151,7 +149,7 @@ function FormInteresse({ peca, whatsapp }: { peca: ObjetoPublico; whatsapp: stri
   return (
     <form className="painel-form" onSubmit={enviar} noValidate>
       <h2>Tenho interesse</h2>
-      <p>Deixe seu contato. A negociação é feita diretamente com a família, pelo WhatsApp.</p>
+      <p>{perfil ? 'Confira seus dados e, se quiser, deixe uma mensagem.' : 'Deixe seu nome e WhatsApp.'} A família entra em contato com você.</p>
       <div className="campos">
         <div className="campo">
           <label htmlFor="i-nome">Nome</label>

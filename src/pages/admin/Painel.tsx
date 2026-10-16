@@ -1,4 +1,6 @@
 import { Mensagem, useConsulta, useTitulo } from '../../components/comuns'
+import { useAuth } from '../../lib/auth'
+import { useConfig } from '../../lib/config'
 import { formatarData, formatarTelefone } from '../../lib/formato'
 import { Link } from '../../lib/rotas'
 import { mensagemErro, supabase } from '../../lib/supabase'
@@ -11,6 +13,8 @@ async function contar(filtro: (q: any) => any, tabela = 'objetos') {
 
 export function Painel() {
   useTitulo('Painel')
+  const { config } = useConfig()
+  const { admin } = useAuth()
   const { dados, erro, carregando } = useConsulta(async () => {
     const [total, venda, reservadas, vendidas, novos, recentes] = await Promise.all([
       contar((q) => q),
@@ -32,6 +36,17 @@ export function Painel() {
       </div>
       {erro ? <Mensagem tipo="erro">{mensagemErro(erro)}</Mensagem> : carregando || !dados ? <p className="carregando">Carregando…</p> : (
         <>
+          <section className={`adm-bloco chave-vendas${config.vendas_ativas ? ' chave-vendas--ligada' : ''}`}>
+            <div>
+              <h2>Vendas {config.vendas_ativas ? 'ligadas' : 'desligadas'}</h2>
+              <p style={{ margin: 0 }}>
+                {config.vendas_ativas
+                  ? 'O público vê as peças “À venda” e pode registrar interesse.'
+                  : 'O site é só da família e convidados. Preços e situações podem ser preenchidos antes de ligar as vendas.'}
+              </p>
+            </div>
+            {admin && <Link href="/admin/configuracoes" className="botao botao--claro">Configurações</Link>}
+          </section>
           <div className="numeros">
             <Link href="/admin/interesses" className="numero"><strong>{dados.novos}</strong><span>interesses novos</span></Link>
             <Link href="/admin/pecas" className="numero"><strong>{dados.total}</strong><span>peças cadastradas</span></Link>
