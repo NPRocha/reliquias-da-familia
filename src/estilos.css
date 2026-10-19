@@ -370,7 +370,7 @@ a.numero:hover { outline: 1px solid var(--linha); }
 .polaroid img { display: block; width: 252px; height: 252px; object-fit: cover; }
 .polaroid figcaption {
   position: absolute; left: 0; right: 0; bottom: 10px; text-align: center;
-  font: 700 1.9rem/1 var(--script); color: var(--tinta);
+  font: 700 1.9rem/1 var(--script); color: var(--tinta); white-space: nowrap;
 }
 .fita {
   position: absolute; top: -14px; left: 96px; width: 92px; height: 28px;
@@ -401,7 +401,7 @@ a.numero:hover { outline: 1px solid var(--linha); }
   .polaroid-pilha { margin: 10px 0 0; }
   .polaroid { width: 200px; padding: 10px 10px 42px; }
   .polaroid img { width: 180px; height: 180px; }
-  .polaroid figcaption { font-size: 1.5rem; bottom: 8px; }
+  .polaroid figcaption { font-size: 1.35rem; bottom: 10px; }
   .polaroid-fundo { left: 26px; top: 12px; width: 186px; height: 214px; }
   .fita { left: 64px; width: 72px; height: 22px; }
   .fita--verde { left: auto; }
