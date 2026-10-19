@@ -354,7 +354,7 @@ a.numero:hover { outline: 1px solid var(--linha); }
   position: absolute; left: 11.9%; top: 9.43%; width: 76.2%; height: 81.1%;
   border-radius: 50%; overflow: hidden; background: var(--folha);
 }
-.retrato-foto img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; opacity: 0.9; }
+.retrato-foto img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; opacity: 0.9; }
 .retrato svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 
 .ficha-entrada {
