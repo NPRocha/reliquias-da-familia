@@ -326,48 +326,70 @@ a.numero:hover { outline: 1px solid var(--linha); }
 .cartao-interesse blockquote { margin: 0; padding-left: 12px; border-left: 2px solid var(--linha); font-family: var(--serif); white-space: pre-line; }
 .cartao-interesse .edicao { display: grid; grid-template-columns: 180px 160px minmax(0, 1fr) auto; gap: 10px; align-items: end; }
 
-/* ---------- Tela de entrada ("caixa de memórias") ---------- */
+/* ---------- Tela de entrada ("álbum de família") ---------- */
 .entrada {
+  --terracota: #a24a26;
+  --terracota-escuro: #7e381c;
+  --script: 'Caveat', 'Segoe Print', cursive;
+  --titulo-album: 'Fraunces', Georgia, serif;
   min-height: 100vh; display: grid; place-items: center;
   padding: clamp(32px, 6vw, 72px) var(--margem);
-  background-color: var(--papel);
-  background-image:
-    radial-gradient(circle at 18% 22%, rgba(176, 141, 87, 0.10), transparent 42%),
-    radial-gradient(circle at 85% 80%, rgba(62, 44, 35, 0.06), transparent 45%);
+  background-color: #f6ecdf;
+  background-image: radial-gradient(rgba(162, 74, 38, 0.10) 1.2px, transparent 1.3px);
+  background-size: 22px 22px;
 }
+.entrada a { color: var(--terracota); }
+.entrada a:hover { color: var(--terracota-escuro); }
+.entrada :focus-visible { outline-color: var(--terracota); }
+.entrada input:focus { outline-color: var(--terracota); border-color: var(--terracota); }
 .entrada-miolo {
   width: 100%; max-width: 1100px; display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
   gap: clamp(32px, 6vw, 72px); align-items: center;
 }
-.entrada-apresentacao { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; }
-.entrada-apresentacao h1 { font-size: clamp(2.6rem, 6vw, 4.6rem); font-weight: 400; letter-spacing: -0.02em; line-height: 1.02; }
-.entrada-sobretitulo { margin: 0; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--tinta-2); }
-.entrada-frase { margin: 0; max-width: 30em; font-family: var(--serif); font-style: italic; font-size: clamp(1.1rem, 2vw, 1.35rem); line-height: 1.55; color: var(--tinta-2); }
-.entrada-fio { width: 64px; height: 1px; background: var(--latao); }
-.entrada-vendas { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.entrada-apresentacao { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
+.entrada-apresentacao h1 {
+  font-family: var(--titulo-album); font-weight: 600; font-size: clamp(2.6rem, 5.5vw, 3.7rem);
+  letter-spacing: -0.02em; line-height: 1.02; margin-top: 10px;
+}
+.entrada-apresentacao h1 em { font-style: italic; font-weight: 400; color: var(--terracota); }
+.entrada-frase { margin: 0; max-width: 30em; font-size: clamp(1.05rem, 1.8vw, 1.2rem); line-height: 1.6; color: #5c4a3f; }
+.entrada-vendas { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin-top: 6px; }
 .entrada-vendas p { margin: 0; font-size: 1.1rem; }
 .entrada-nota { font-size: 0.88rem; color: var(--tinta-2); }
 
-.retrato { position: relative; width: 210px; aspect-ratio: 168 / 212; flex-shrink: 0; }
-.retrato-foto {
-  position: absolute; left: 11.9%; top: 9.43%; width: 76.2%; height: 81.1%;
-  border-radius: 50%; overflow: hidden; background: var(--folha);
+.polaroid-pilha { position: relative; margin: 14px 0 0 12px; }
+.polaroid-fundo {
+  position: absolute; left: 40px; top: 18px; width: 260px; height: 300px;
+  background: #fff; transform: rotate(5deg); box-shadow: 0 8px 22px rgba(62, 44, 35, 0.12);
 }
-.retrato-foto img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; opacity: 0.9; }
-.retrato svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.polaroid {
+  position: relative; margin: 0; width: 280px; padding: 14px 14px 54px; background: #fff;
+  transform: rotate(-4deg); box-shadow: 0 14px 34px rgba(62, 44, 35, 0.20);
+}
+.polaroid img { display: block; width: 252px; height: 252px; object-fit: cover; }
+.polaroid figcaption {
+  position: absolute; left: 0; right: 0; bottom: 10px; text-align: center;
+  font: 700 1.9rem/1 var(--script); color: var(--tinta);
+}
+.fita {
+  position: absolute; top: -14px; left: 96px; width: 92px; height: 28px;
+  background: rgba(232, 190, 120, 0.65); transform: rotate(3deg);
+}
+.fita--verde { left: auto; right: 44px; top: -12px; width: 84px; height: 24px; background: rgba(160, 186, 132, 0.6); transform: rotate(-4deg); }
 
 .ficha-entrada {
-  position: relative; background: var(--folha); border: 1px solid var(--linha);
-  padding: 44px 40px 32px; display: flex; flex-direction: column; gap: 18px;
+  position: relative; background: #fffaf3; border: 1px solid #ead9c3; border-radius: 6px;
+  padding: 40px 40px 30px; display: flex; flex-direction: column; gap: 18px;
+  box-shadow: 0 16px 44px rgba(62, 44, 35, 0.12);
 }
-.ficha-entrada hr { width: 100%; border: 0; border-top: 1px solid var(--linha); margin: 0; }
-.cantoneira { position: absolute; width: 0; height: 0; border: 0 solid transparent; }
-.cantoneira--1 { top: -1px; left: -1px; border-top: 30px solid var(--tinta); border-right-width: 30px; }
-.cantoneira--2 { top: -1px; right: -1px; border-top: 30px solid var(--tinta); border-left-width: 30px; }
-.cantoneira--3 { bottom: -1px; left: -1px; border-bottom: 30px solid var(--tinta); border-right-width: 30px; }
-.cantoneira--4 { bottom: -1px; right: -1px; border-bottom: 30px solid var(--tinta); border-left-width: 30px; }
-.entrada-titulo h2 { font-size: 1.9rem; margin-bottom: 8px; }
+.ficha-entrada input { border-color: #e2cfb6; border-radius: 6px; min-height: 48px; }
+.ficha-entrada .botao { background: var(--terracota); border-color: var(--terracota); border-radius: 6px; }
+.ficha-entrada .botao:hover { background: var(--terracota-escuro); border-color: var(--terracota-escuro); }
+.ficha-entrada hr { width: 100%; border: 0; border-top: 1px dashed #e2cfb6; margin: 0; }
+.manuscrito { font: 700 1.65rem/1 var(--script); color: var(--terracota); }
+.entrada-titulo { display: flex; flex-direction: column; gap: 6px; }
+.entrada-titulo h2 { font-family: var(--titulo-album); font-weight: 600; font-size: 1.75rem; }
 .entrada-titulo p { margin: 0; color: var(--tinta-2); line-height: 1.5; }
 .entrada-links { display: flex; justify-content: center; gap: 10px; font-size: 0.95rem; color: var(--tinta-2); }
 .entrada-aviso { margin: 0; text-align: center; font-size: 0.9rem; color: var(--tinta-2); }
@@ -376,14 +398,20 @@ a.numero:hover { outline: 1px solid var(--linha); }
   .entrada-miolo { grid-template-columns: 1fr; }
   .entrada-apresentacao { align-items: center; text-align: center; }
   .entrada-vendas { align-items: center; }
-  .retrato { width: 128px; }
+  .polaroid-pilha { margin: 10px 0 0; }
+  .polaroid { width: 200px; padding: 10px 10px 42px; }
+  .polaroid img { width: 180px; height: 180px; }
+  .polaroid figcaption { font-size: 1.5rem; bottom: 8px; }
+  .polaroid-fundo { left: 26px; top: 12px; width: 186px; height: 214px; }
+  .fita { left: 64px; width: 72px; height: 22px; }
+  .fita--verde { left: auto; }
   .ficha-entrada { padding: 32px 22px 24px; }
 }
 
 /* ---------- Complementos ---------- */
 .botao--grande { min-height: 48px; padding: 12px 24px; font-size: 1rem; }
-.botao--escuro { background: var(--tinta); border-color: var(--tinta); color: var(--folha); }
-.botao--escuro:hover { background: #523d31; border-color: #523d31; color: #fff; }
+.botao--terracota, .entrada a.botao--terracota { background: #a24a26; border-color: #a24a26; color: #fff; }
+.botao--terracota:hover, .entrada a.botao--terracota:hover { background: #7e381c; border-color: #7e381c; color: #fff; }
 .nav-botao {
   color: var(--tinta-2); font: 500 1rem var(--sans); padding: 8px 12px; border: 0;
   background: none; cursor: pointer; border-radius: var(--r-pequeno);

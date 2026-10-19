@@ -31,8 +31,8 @@ CREATE TABLE public.configuracoes (
 
 INSERT INTO public.configuracoes (id, entrada_frase, entrada_convite, entrada_aviso, vendas_texto) VALUES (
     1,
-    'Aqui guardamos o que o tempo nos deixou: objetos que atravessaram gerações e as histórias de quem cuidou deles.',
-    'Cada peça tem um nome, uma origem e uma lembrança. Entre para conhecê-las.',
+    'Para quem cuida do que veio antes: objetos que atravessaram gerações, preservados com carinho para as que ainda virão.',
+    'Cada peça tem um nome, uma origem e uma lembrança.',
     'Acesso restrito à família e a convidados.',
     'Algumas peças do acervo estão em busca de um novo lar.'
 );

@@ -4,19 +4,16 @@ import { texto, useConfig } from '../lib/config'
 import { Link, navegar, useLocalizacao } from '../lib/rotas'
 import { mensagemErro, supabase } from '../lib/supabase'
 
-/** Retrato em moldura oval (desenho em traço da matriarca da família). */
+/** Retrato em estilo Polaroid, preso com fita, como num álbum de família. */
 function Retrato() {
   return (
-    <div className="retrato">
-      <div className="retrato-foto">
-        <img src="/retrato.png" alt="Retrato em traço da matriarca da família" width={360} height={460} />
-      </div>
-      <svg viewBox="0 0 168 212" fill="none" aria-hidden="true">
-        <ellipse cx="84" cy="106" rx="80" ry="102" stroke="var(--latao)" strokeWidth="2" />
-        <ellipse cx="84" cy="106" rx="72" ry="94" stroke="var(--latao)" strokeWidth="1" />
-        <ellipse cx="84" cy="106" rx="64" ry="86" stroke="var(--linha)" strokeWidth="1" />
-        <path d="M84 4 l5 7 -5 6 -5 -6z M84 208 l5 -7 -5 -6 -5 6z" fill="var(--latao)" />
-      </svg>
+    <div className="polaroid-pilha">
+      <span className="polaroid-fundo" aria-hidden="true" />
+      <figure className="polaroid">
+        <img src="/retrato.jpg" alt="Retrato da matriarca da família entre flores" width={252} height={252} />
+        <figcaption>Quem guarda, cuida.</figcaption>
+        <span className="fita" aria-hidden="true" />
+      </figure>
     </div>
   )
 }
@@ -29,17 +26,12 @@ export function MolduraEntrada({ lateral, children }: { lateral?: ReactNode; chi
       <div className="entrada-miolo">
         <section className="entrada-apresentacao">
           <Retrato />
-          <p className="entrada-sobretitulo">Acervo de família</p>
-          <h1>Relíquias da Família</h1>
+          <h1>Relíquias <em>da Família</em></h1>
           <p className="entrada-frase">{texto(config, 'entrada_frase')}</p>
-          <span className="entrada-fio" aria-hidden="true" />
           {lateral}
         </section>
         <section className="ficha-entrada">
-          <span className="cantoneira cantoneira--1" aria-hidden="true" />
-          <span className="cantoneira cantoneira--2" aria-hidden="true" />
-          <span className="cantoneira cantoneira--3" aria-hidden="true" />
-          <span className="cantoneira cantoneira--4" aria-hidden="true" />
+          <span className="fita fita--verde" aria-hidden="true" />
           {children}
         </section>
       </div>
@@ -70,9 +62,9 @@ export function Entrada() {
   const vendas = config.vendas_ativas && (
     <div className="entrada-vendas">
       <p>{texto(config, 'vendas_texto')}</p>
-      <Link href="/acervo" className="botao botao--escuro botao--grande">
+      <Link href="/acervo" className="botao botao--terracota botao--grande">
         Conhecer as peças disponíveis
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--latao)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f0c9a8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M5 12h14M13 6l6 6-6 6" />
         </svg>
       </Link>
@@ -83,7 +75,8 @@ export function Entrada() {
   return (
     <MolduraEntrada lateral={vendas}>
       <div className="entrada-titulo">
-        <h2>Bem-vindo</h2>
+        <span className="manuscrito">Bem-vindo de volta!</span>
+        <h2>Abra o álbum da família</h2>
         <p>{texto(config, 'entrada_convite')}</p>
       </div>
       <form onSubmit={entrar} className="campos">

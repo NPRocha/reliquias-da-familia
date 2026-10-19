@@ -6,8 +6,8 @@ import type { Configuracao } from './tipos'
 
 const PADRAO: Configuracao = {
   vendas_ativas: false,
-  entrada_frase: 'Aqui guardamos o que o tempo nos deixou: objetos que atravessaram gerações e as histórias de quem cuidou deles.',
-  entrada_convite: 'Cada peça tem um nome, uma origem e uma lembrança. Entre para conhecê-las.',
+  entrada_frase: 'Para quem cuida do que veio antes: objetos que atravessaram gerações, preservados com carinho para as que ainda virão.',
+  entrada_convite: 'Cada peça tem um nome, uma origem e uma lembrança.',
   entrada_aviso: 'Acesso restrito à família e a convidados.',
   vendas_texto: 'Algumas peças do acervo estão em busca de um novo lar.',
 }
