@@ -76,7 +76,7 @@ export function Entrada() {
     <MolduraEntrada lateral={vendas}>
       <div className="entrada-titulo">
         <span className="manuscrito">Bem-vindo de volta!</span>
-        <h2>Abra o álbum da família</h2>
+        <h2>Veja as relíquias da família</h2>
         <p>{texto(config, 'entrada_convite')}</p>
       </div>
       <form onSubmit={entrar} className="campos">
