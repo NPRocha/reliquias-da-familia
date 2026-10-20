@@ -253,6 +253,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--acao); outl
 /* ---------- Sobre ---------- */
 .sobre { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: clamp(28px, 5vw, 72px); padding-top: 56px; align-items: start; }
 .sobre .moldura { aspect-ratio: 4 / 5; }
+.sobre .moldura img, .moldura-retrato img { object-position: 50% 25%; }
+.moldura-retrato { aspect-ratio: 4 / 5; }
 .sobre h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); }
 .sobre .cargo { color: var(--tinta-2); margin-top: 8px; }
 .sobre .corpo { font-family: var(--serif); font-size: 1.15rem; line-height: 1.7; white-space: pre-line; margin-top: 28px; max-width: 36em; }

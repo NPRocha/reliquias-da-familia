@@ -72,9 +72,9 @@ export function InstitucionalAdm() {
         <span className="ajuda">Visível para a família e convidados enquanto as vendas estiverem desligadas.</span>
       </div>
       <form onSubmit={salvar}>
-        <section className="adm-bloco" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 200px) minmax(0, 1fr)', gap: 20, alignItems: 'start' }}>
+        <section className="adm-bloco" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 220px) minmax(0, 1fr)', gap: 20, alignItems: 'start' }}>
           <div>
-            <Foto bucket={BUCKET_INSTITUCIONAL} caminho={dados?.foto_caminho} alt="Foto do responsável" />
+            <Foto className="moldura-retrato" bucket={BUCKET_INSTITUCIONAL} caminho={dados?.foto_caminho} alt="Foto do responsável" />
             <label className="botao botao--claro botao--pequeno" style={{ marginTop: 10, width: '100%' }}>
               {enviandoFoto ? 'Enviando…' : 'Trocar foto'}
               <input type="file" accept="image/*" hidden disabled={enviandoFoto} onChange={(e) => trocarFoto(e.target.files?.[0])} />
