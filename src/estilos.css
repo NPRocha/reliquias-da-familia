@@ -362,18 +362,21 @@ a.numero:hover { outline: 1px solid var(--linha); }
 
 .polaroid-pilha { position: relative; margin: 14px 0 0 12px; }
 .polaroid-fundo {
-  position: absolute; left: 40px; top: 18px; width: 260px; height: 300px;
+  position: absolute; left: 40px; top: 18px; width: 260px; height: 322px;
   background: #fff; transform: rotate(5deg); box-shadow: 0 8px 22px rgba(62, 44, 35, 0.12);
 }
 .polaroid {
-  position: relative; margin: 0; width: 280px; padding: 14px 14px 54px; background: #fff;
+  position: relative; margin: 0; width: 280px; padding: 14px 14px 76px; background: #fff;
   transform: rotate(-4deg); box-shadow: 0 14px 34px rgba(62, 44, 35, 0.20);
 }
 .polaroid img { display: block; width: 252px; height: 252px; object-fit: cover; }
 .polaroid figcaption {
-  position: absolute; left: 0; right: 0; bottom: 10px; text-align: center;
-  font: 700 1.9rem/1 var(--script); color: var(--tinta); white-space: nowrap;
+  position: absolute; left: 0; right: 0; bottom: 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  text-align: center; font-family: var(--script); white-space: nowrap;
 }
+.polaroid-nome { font-weight: 700; font-size: 1.6rem; line-height: 1; color: var(--tinta); }
+.polaroid-sub { font-weight: 700; font-size: 1.2rem; line-height: 1.05; color: var(--terracota); }
 .fita {
   position: absolute; top: -14px; left: 96px; width: 92px; height: 28px;
   background: rgba(232, 190, 120, 0.65); transform: rotate(3deg);
@@ -401,10 +404,12 @@ a.numero:hover { outline: 1px solid var(--linha); }
   .entrada-apresentacao { align-items: center; text-align: center; }
   .entrada-vendas { align-items: center; }
   .polaroid-pilha { margin: 10px 0 0; }
-  .polaroid { width: 200px; padding: 10px 10px 42px; }
-  .polaroid img { width: 180px; height: 180px; }
-  .polaroid figcaption { font-size: 1.35rem; bottom: 10px; }
-  .polaroid-fundo { left: 26px; top: 12px; width: 186px; height: 214px; }
+  .polaroid { width: 210px; padding: 10px 10px 58px; }
+  .polaroid img { width: 190px; height: 190px; }
+  .polaroid figcaption { bottom: 9px; }
+  .polaroid-nome { font-size: 1.22rem; }
+  .polaroid-sub { font-size: 0.98rem; }
+  .polaroid-fundo { left: 26px; top: 12px; width: 196px; height: 240px; }
   .fita { left: 64px; width: 72px; height: 22px; }
   .fita--verde { left: auto; }
   .ficha-entrada { padding: 32px 22px 24px; }
