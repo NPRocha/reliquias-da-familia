@@ -34,3 +34,18 @@ O dourado `#B08D57` não é usado em texto: o contraste com o creme é baixo. Pa
 
 ## Para mudar o estilo
 Alterar apenas as variáveis em `:root` no `src/estilos.css`, a cor `theme-color` e o link das fontes no `index.html`, e o `public/favicon.svg`.
+
+## Tela de entrada — "Álbum de família" (19/10/2026)
+A tela de entrada (e a de primeiro acesso) tem um visual próprio, mais alegre; o restante do site segue o Museu clássico.
+
+| Elemento | Definição |
+|---|---|
+| Fundo | `#F6ECDF` com pontinhos terracota suaves |
+| Destaque | Terracota `#A24A26` (botões, links, "da Família"); hover `#7E381C` |
+| Fontes extras | **Fraunces** (título "Relíquias *da Família*" e título da ficha) e **Caveat** (manuscrito) |
+| Foto | Polaroid inclinada com fita adesiva: `public/retrato.jpg` (Maria Anunciação Miguel entre flores) |
+| Legenda da foto | "Maria Anunciação Miguel" (marrom) / "artista plástica e esteta." (terracota), em Caveat |
+| Ficha de entrada | "Bem-vindo de volta!" (Caveat) · "Veja as relíquias da família" · fita verde no canto |
+| Frase de apresentação | "Para quem cuida do que veio antes: objetos que atravessaram gerações, preservados com carinho para as que ainda virão." (editável em Configurações) |
+
+Página Sobre: foto em formato retrato 4:5, também na administração.
