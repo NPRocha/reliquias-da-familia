@@ -65,6 +65,7 @@ SQL Editor → **New query** → colar todo o conteúdo do arquivo → **Run**. 
 | 1 | `001_estrutura_inicial.sql` | Tabelas, regras de segurança (RLS), locais das fotos (buckets `objetos` e `institucional`), estados de conservação | *Success. No rows returned* |
 | 2 | `002_storage_leitura_equipe.sql` | Permite à equipe excluir fotos | *Success. No rows returned* |
 | 3 | `003_vendas_e_acesso.sql` | Chave de vendas, usuários (ADMIN/OPERADOR/VISITANTE) com código de acesso, fotos privadas (máx. 4 por peça, 500 KB), reserva pelo interesse | *Success. No rows returned* |
+| 4 | `004_textos_entrada.sql` | Atualiza os textos da tela de entrada (estilo álbum de família) | Mostra a frase nova |
 
 Os scripts são executados **uma única vez**. Rodar de novo gera erro de "já existe".
 
