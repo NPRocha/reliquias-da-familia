@@ -10,8 +10,11 @@ function Retrato() {
     <div className="polaroid-pilha">
       <span className="polaroid-fundo" aria-hidden="true" />
       <figure className="polaroid">
-        <img src="/retrato.jpg" alt="Retrato da matriarca da família entre flores" width={252} height={252} />
-        <figcaption>Quem guarda, cuida.</figcaption>
+        <img src="/retrato.jpg" alt="Maria Anunciação Miguel entre flores" width={252} height={252} />
+        <figcaption>
+          <span className="polaroid-nome">Maria Anunciação Miguel</span>
+          <span className="polaroid-sub">artista plástica e esteta.</span>
+        </figcaption>
         <span className="fita" aria-hidden="true" />
       </figure>
     </div>
